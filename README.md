@@ -23,4 +23,4 @@ See the `examples` folder.
 
 ## Authors
 
-Enoki (originally named Mortise) was developed at [Keyme](www.key.me) by [Jeff Ciesielski](https://github.com/Jeff-Ciesielski) and [Lianne Lairmore](https://github.com/knithacker)
+Enoki was originally developed at [Keyme](www.key.me) under the name Mortise by [Jeff Ciesielski](https://github.com/Jeff-Ciesielski) and [Lianne Lairmore](https://github.com/knithacker) for robotics control.
