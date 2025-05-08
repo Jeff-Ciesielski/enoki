@@ -1,5 +1,6 @@
-import enoki
 import unittest
+
+import enoki
 
 
 class FakeCommon:
@@ -18,7 +19,7 @@ class FakeFSM:
 
 def makeTestingInternalState(dictState):
     """Takes a dictionary mirroring the internal state
-       a mortise State expects to see and creates that
+       an enoki State expects to see and creates that
        object to be used in testing correct transisitions"""
     return FakeFSM(dictState)
 

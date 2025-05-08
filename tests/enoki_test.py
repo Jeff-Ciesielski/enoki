@@ -1,5 +1,5 @@
 import enoki
-import enoki.testing as testing_mortise
+import enoki.testing as testing_enoki
 
 # Can be run with any testing framework that uses unittest
 
@@ -98,9 +98,9 @@ class NoneState(enoki.State):
         return None
 
 
-class TrueState(enoki.State):
+class RepeatState(enoki.State):
     def on_state(self, st):
-        return True
+        return enoki.Repeat
 
 
 class OnEnterState(enoki.State):
@@ -114,7 +114,7 @@ class OnEnterState(enoki.State):
             return FirstState
 
 
-class TestMortise(testing_mortise.MortiseTest):
+class TestEnoki(testing_enoki.EnokiTest):
     def testFirstToNext(self):
         self.assertNextState(FirstState, NextState)
 
@@ -148,8 +148,8 @@ class TestMortise(testing_mortise.MortiseTest):
     def testNoTransition(self):
         self.assertNoTransition(NoneState)
 
-    def testTrueNoTransition(self):
-        self.assertNoTransition(TrueState)
+    def testRetryNoTransition(self):
+        self.assertNoTransition(RepeatState)
 
     def testOnEnter(self):
         self.assertNextState(OnEnterState, NextState)

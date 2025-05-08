@@ -10,7 +10,7 @@ import threading
 import time
 
 import enoki
-from enoki import State
+from enoki import State, Repeat
 
 
 class Foo(State):
@@ -31,9 +31,9 @@ class Foo(State):
                 return Bar
             elif st.msg['data'] == 'foo':
                 self.count += 1
-                print("Foos: {}".format(self.count))
+                print(f"Foos: {self.count}")
                 # "Swallow" current message (don't trap it)
-                return True
+                return Repeat
 
             # Otherwise return nothing which will trap messages
 
@@ -61,9 +61,9 @@ class Bar(State):
                 # Count kept in shared state that will persist between state
                 # transitions unlike Foo
                 st.common.bars += 1
-                print("Bars: {}".format(st.common.bars))
+                print(f"Bars: {st.common.bars}")
                 # Remain in Bar state (don't trap message)
-                return True
+                return Repeat
 
             # Otherwise remain in Bar and trap ignored message
 
@@ -107,7 +107,7 @@ def loop(msg_queue):
         msg_queue=msg_queue,
         log_fn=print,
         trap_fn=trap_msg,
-        common_state=Common())
+        common_data=Common())
 
     # Initial kick of the state machine for setup
     fsm.tick()

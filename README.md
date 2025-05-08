@@ -14,7 +14,7 @@ systems.
 
 ## Requirements
 
-* Python >= 3.41
+* Python >= 3.10
 * GraphViz (Optional for state machine visualization)
 
 ## Examples

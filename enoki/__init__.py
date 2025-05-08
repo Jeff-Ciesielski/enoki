@@ -10,6 +10,8 @@ __all__ = [
     NoPushedStatesError,
     Push,
     Pop,
+    Retry,
+    Repeat,
     state_name,
     base_state_name,
     State,
