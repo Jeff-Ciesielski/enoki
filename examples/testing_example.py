@@ -1,5 +1,5 @@
-import mortise
-import mortise.testing as testing_mortise
+import enoki
+import enoki.testing as testing_mortise
 
 # Can be run with any testing framework that uses unittest
 
@@ -9,17 +9,17 @@ class CommonState:
         self.entered = False
 
 
-class FirstState(mortise.State):
+class FirstState(enoki.State):
     def on_state(self, st):
         return NextState
 
 
-class NextState(mortise.State):
+class NextState(enoki.State):
     def on_enter(self, st):
         st.common.entered = True
 
 
-class FirstState2(mortise.State):
+class FirstState2(enoki.State):
     def on_state(self, st):
         if st.common.cool:
             return CoolState
@@ -31,7 +31,7 @@ class CoolState: pass
 class HotState: pass
 
 
-class LoopState(mortise.State):
+class LoopState(enoki.State):
     def on_state(self, st):
         if st.common.num < 5:
             st.common.num += 1
@@ -43,9 +43,9 @@ class LoopState(mortise.State):
 class LoopDoneState: pass
 
 
-class TimeoutState(mortise.State):
+class TimeoutState(enoki.State):
     def on_state(self, st):
-        raise mortise.StateTimedOut
+        raise enoki.StateTimedOut
 
     def on_timeout(self, st):
         return TimedOutState
@@ -54,9 +54,9 @@ class TimeoutState(mortise.State):
 class TimedOutState: pass
 
 
-class RetryLimitState(mortise.State):
+class RetryLimitState(enoki.State):
     def on_state(self, st):
-        raise mortise.StateRetryLimitError
+        raise enoki.StateRetryLimitError
 
     def on_timeout(self, st):
         return TimedOutState
@@ -68,7 +68,7 @@ class RetryLimitState(mortise.State):
 class FailedState: pass
 
 
-class ErrorState(mortise.State):
+class ErrorState(enoki.State):
     def on_state(self, st):
         pass
 
@@ -79,7 +79,7 @@ class ErrorState(mortise.State):
         return FailedState
 
 
-class MsgState(mortise.State):
+class MsgState(enoki.State):
     def on_state(self, st):
         if st.msg is None:
             return
@@ -93,17 +93,17 @@ class GoodState: pass
 class BadState: pass
 
 
-class NoneState(mortise.State):
+class NoneState(enoki.State):
     def on_state(self, st):
         return None
 
 
-class TrueState(mortise.State):
+class TrueState(enoki.State):
     def on_state(self, st):
         return True
 
 
-class OnEnterState(mortise.State):
+class OnEnterState(enoki.State):
     def on_enter(self, st):
         self.entered = True
 

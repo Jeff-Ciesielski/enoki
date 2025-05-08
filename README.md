@@ -1,6 +1,6 @@
-# Mortise - A python state machine framework
+# Enoki - A python state machine framework
 
-Mortise is a synchronous state machine library for event based
+Enoki is a synchronous state machine library for event based
 systems.
 
 ## Features
@@ -14,7 +14,7 @@ systems.
 
 ## Requirements
 
-* Python >= 3.4
+* Python >= 3.41
 * GraphViz (Optional for state machine visualization)
 
 ## Examples
@@ -23,4 +23,4 @@ See the `examples` folder.
 
 ## Authors
 
-Mortise was developed at [Keyme](www.key.me) by [Jeff Ciesielski](https://github.com/Jeff-Ciesielski) and [Lianne Lairmore](https://github.com/knithacker)
+Enoki (originally named Mortise) was developed at [Keyme](www.key.me) by [Jeff Ciesielski](https://github.com/Jeff-Ciesielski) and [Lianne Lairmore](https://github.com/knithacker)

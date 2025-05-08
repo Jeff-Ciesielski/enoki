@@ -9,8 +9,8 @@ import random
 import threading
 import time
 
-import mortise
-from mortise import State
+import enoki
+from enoki import State
 
 
 class Foo(State):
@@ -100,9 +100,9 @@ def loop(msg_queue):
     # handling IPC traffic or otherwise generating events to be
     # consumed by the state machine
 
-    fsm = mortise.StateMachine(
+    fsm = enoki.StateMachine(
         initial_state=Foo,
-        final_state=mortise.DefaultStates.End,
+        final_state=enoki.DefaultStates.End,
         default_error_state=ErrorState,
         msg_queue=msg_queue,
         log_fn=print,
@@ -117,7 +117,7 @@ def loop(msg_queue):
 
 
 def msg_loop(msg_queue):
-    # NOTE: The messages consumed by Mortise are content agnostic, the
+    # NOTE: The messages consumed by enoki are content agnostic, the
     # implementation / checking of message type is up to the user.
 
     idx = 0
@@ -131,16 +131,16 @@ def msg_loop(msg_queue):
 
 def main():
     msg_queue = queue.Queue()
-    mortise_t = threading.Thread(target=loop, kwargs={'msg_queue': msg_queue})
+    enoki_t = threading.Thread(target=loop, kwargs={'msg_queue': msg_queue})
     msg_t = threading.Thread(target=msg_loop, kwargs={'msg_queue': msg_queue})
 
-    mortise_t.daemon = True
+    enoki_t.daemon = True
     msg_t.daemon = True
 
-    mortise_t.start()
+    enoki_t.start()
     msg_t.start()
 
-    mortise_t.join()
+    enoki_t.join()
     msg_t.join()
 
 main()

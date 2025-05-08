@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import mortise
-from mortise import State
+import enoki
+from enoki import State
 
 
 class Ping(State):
@@ -32,9 +32,9 @@ class ErrorState(State):
 
 
 def main():
-    fsm = mortise.StateMachine(
+    fsm = enoki.StateMachine(
         initial_state=Ping,
-        final_state=mortise.DefaultStates.End,
+        final_state=enoki.DefaultStates.End,
         default_error_state=ErrorState,
         log_fn=print)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" mortise is a finite state machine library.
+""" enoki is a finite state machine library.
 """
 
 from threading import Timer
@@ -49,6 +49,9 @@ class BlockedInUntimedState(Exception):
                          .format(state_name(state)))
         self.state = state
 
+class TransitionType:
+    def name(self):
+        return self.__class__.__name__
 
 class Push(object):
     def __init__(self, *args):
@@ -73,18 +76,17 @@ def base_state_name(descriptor):
 
 
 class State:
-    """States are the workhorses of the mortise library. User states
-    should inherit from State and provide
-    on_enter/on_leave/on_fail/on_timeout methods (as appropriate,
-    pass-through defaults are provided), and MUST provide on on_state
-    handler.
+    """States are the workhorses of the enoki library. User states
+    should inherit from State and provide on_enter/on_leave/on_fail/on_timeout
+    methods (as appropriate, pass-through defaults are provided), and MUST
+    provide on on_state handler.
 
-    on_enter/on_leave are fired once on entry and on leaving the
-    state. These methods should return nothing as they are incapable
-    of affecting the transitioning of the state machine.
+    on_enter/on_leave are fired once on entry and on leaving the state. These
+    methods should return nothing as they are incapable of affecting the
+    transitioning of the state machine.
 
-    on_state is the main/required method of each state. on_state
-    should return one of several options:
+    on_state is the main/required method of each state. on_state should return
+    one of several options:
 
     * None/True - A wait state, The state is waiting on some external
     stimulus (like a message).
@@ -320,7 +322,7 @@ class StateMachine:
     neither a timeout nor is the final state unless it is included in an
     iterable called dwell_states.
 
-    (For a visual overview of the data flow, see mortise_data_flow.png)
+    (For a visual overview of the data flow, see enoki_data_flow.png)
 
     Finally, the user MAY supply a common_state class instance. This
     will be passed into each state and can be used to propagate

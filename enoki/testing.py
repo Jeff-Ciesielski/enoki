@@ -1,4 +1,4 @@
-import mortise
+import enoki
 import unittest
 
 
@@ -23,7 +23,7 @@ def makeTestingInternalState(dictState):
     return FakeFSM(dictState)
 
 
-class MortiseTest(unittest.TestCase):
+class EnokiTest(unittest.TestCase):
 
     def _next_state(self, fsm, state):
         while True:
@@ -31,15 +31,15 @@ class MortiseTest(unittest.TestCase):
                 result_state = state.tick(fsm)
                 if result_state is not None:
                     break
-            except (mortise.StateRetryLimitError,
-                    mortise.StateTimedOut) as e:
+            except (enoki.StateRetryLimitError,
+                    enoki.StateTimedOut) as e:
                 fsm.msg = e
         return result_state
 
-    def assertNextState(self, mortise_state, next_state,
+    def assertNextState(self, enoki_state, next_state,
                         initial_state=None, msg=None,
                         enter_next_state=False):
-        current_state = mortise_state()
+        current_state = enoki_state()
         fake_fsm = FakeFSM(initial_state or {})
         fake_fsm.msg = msg
         result_state = self._next_state(fake_fsm, current_state)
@@ -48,27 +48,27 @@ class MortiseTest(unittest.TestCase):
             _next_state = next_state()
             _next_state.on_enter_handler(fake_fsm)
 
-    def assertTimedOutState(self, mortise_state, next_state,
+    def assertTimedOutState(self, enoki_state, next_state,
                             initial_state=None):
-        self.assertNextState(mortise_state, next_state, initial_state,
-                             mortise.StateTimedOut())
+        self.assertNextState(enoki_state, next_state, initial_state,
+                             enoki.StateTimedOut())
 
-    def assertFailState(self, mortise_state, next_state, initial_state=None):
-        self.assertNextState(mortise_state, next_state, initial_state,
-                             mortise.StateRetryLimitError())
+    def assertFailState(self, enoki_state, next_state, initial_state=None):
+        self.assertNextState(enoki_state, next_state, initial_state,
+                             enoki.StateRetryLimitError())
 
-    def _single_transition(self, mortise_state, initial_state=None, msg=None):
-        current_state = mortise_state()
+    def _single_transition(self, enoki_state, initial_state=None, msg=None):
+        current_state = enoki_state()
         fake_fsm = FakeFSM(initial_state or {})
         fake_fsm.msg = msg
         return current_state.tick(fake_fsm)
 
-    def assertNoTransition(self, mortise_state, initial_state=None, msg=None):
+    def assertNoTransition(self, enoki_state, initial_state=None, msg=None):
         self.assertIn(
-            self._single_transition(mortise_state, initial_state, msg),
-            mortise.BLOCKING_RETURNS)
+            self._single_transition(enoki_state, initial_state, msg),
+            enoki.BLOCKING_RETURNS)
 
-    def assertSomeTransition(self, mortise_state, initial_state=None,
+    def assertSomeTransition(self, enoki_state, initial_state=None,
                              msg=None):
         self.assertIsNotNone(
-            self._single_transition(mortise_state, initial_state, msg))
+            self._single_transition(enoki_state, initial_state, msg))
