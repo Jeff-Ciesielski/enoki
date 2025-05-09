@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.hatch.version]
 source = "vcs"
-raw-options = { root = ".." }
+raw-options = { root = "." }
 fallback-version = "0.1.0"
 dirty-suffix = ".dirty"
 
