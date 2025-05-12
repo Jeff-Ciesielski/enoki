@@ -113,7 +113,13 @@ def loop(msg_queue):
     fsm.tick()
 
     while True:
-        fsm.tick(msg_queue.get())
+        msg = msg_queue.get()
+        if msg is None:
+            break
+        fsm.tick(msg)
+        
+    # Dump the state transitions as a mermaid graph
+    fsm.save_mermaid_flowchart('blocking_state_machine.mmd')
 
 
 def msg_loop(msg_queue):
@@ -121,12 +127,13 @@ def msg_loop(msg_queue):
     # implementation / checking of message type is up to the user.
 
     idx = 0
-    while True:
+    indices = [random.randint(0, 2) for _ in range(50)]
+    for idx in indices:
         messages = ['foo', 'bar', 'baz']
-        idx = random.randint(0, 2)
         idx %= len(messages)
         msg_queue.put({'data': messages[idx]})
-        time.sleep(1)
+        time.sleep(0.1)
+    msg_queue.put(None)  # Stop the state machine
 
 
 def main():
@@ -142,5 +149,6 @@ def main():
 
     enoki_t.join()
     msg_t.join()
+    
 
 main()

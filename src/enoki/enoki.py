@@ -305,17 +305,17 @@ class State:
         if hasattr(self, "on_state"):
             return self.on_state(evt)
         else:
-            raise MissingOnStateHandler(
-                f"State {self.name} has no on_state handler!"
-            )
+            raise MissingOnStateHandler(f"State {self.name} has no on_state handler!")
 
     def on_leave_handler(self, evt):
         return self._wrap_leave(evt, self.on_leave)
+
 
 @dataclass
 class TransitionType:
     def name(self):
         return self.__class__.__name__
+
 
 @dataclass(init=False)
 class Push(TransitionType):
@@ -325,6 +325,7 @@ class Push(TransitionType):
     Args:
         *push_states (List[Type[State]]): A variable number of state classes to be pushed onto the stack.
     """
+
     push_states: list[type[State]]
 
     def __init__(self, *push_states: list[type[State]]):
@@ -365,7 +366,6 @@ class GenericCommon:
     between FSM states should the user not provide a state container.
 
     """
-
 
 
 @dataclass
@@ -541,6 +541,42 @@ class StateMachine:
         self._current = next_state()
 
     @property
+    def mermaid_flowchart(self):
+        result = "flowchart LR\n"
+        clusters = collections.defaultdict(set)
+        transitions = ""
+        cluster_transitions = set()
+        for trans_tup in self._transitions:
+            (first_base, first, second_base, second) = trans_tup
+
+            clusters[first_base].add(first)
+            clusters[second_base].add(second)
+            deltas = self._transition_times[trans_tup]
+            min_delta = min(deltas, key=lambda x: x[1])[1]
+            max_delta = max(deltas, key=lambda x: x[1])[1]
+            mean_delta = sum([x[1] for x in deltas]) / len(deltas)
+            print(f"min: {min_delta}, max: {max_delta}, mean: {mean_delta}")
+            delta_str = f"{min_delta:.2f} - {max_delta:.2f} ({mean_delta:.2f})"
+            transitions += f'  {first} -->|"{delta_str}"| {second}\n'
+
+        # Add clusters
+        for cname, cluster in clusters.items():
+            if cname == "None":
+                continue
+            result += f"  subgraph {cname}\n"
+            for node in cluster:
+                result += f"    {node}\n"
+            result += "  end\n"
+
+        result += transitions
+        result += "\n"
+        return result
+
+    def save_mermaid_flowchart(self, filename):
+        with open(filename, "w") as f:
+            f.write(self.mermaid_flowchart)
+
+    @property
     def graphviz_digraph(self):
         result = "digraph State {\n\trankdir=LR;\n\tnodesep=0.5;\n"
         clusters = collections.defaultdict(set)
@@ -552,9 +588,7 @@ class StateMachine:
             clusters[second_base].add(second)
             cluster_transitions.add(f"{first_base}->{second_base}")
             trans_deltas = self._transition_times[trans_tup]
-            trans_deltas_strs = [
-                f"{t_id}: {time:.2}" for t_id, time in trans_deltas
-            ]
+            trans_deltas_strs = [f"{t_id}: {time:.2}" for t_id, time in trans_deltas]
             transitions += '{}->{} [ label="{}" ];\n'.format(
                 first, second, "\n".join(trans_deltas_strs)
             )
@@ -570,6 +604,10 @@ class StateMachine:
         result += transitions
         result += "}\n"
         return result
+
+    def save_graphviz_digraph(self, filename):
+        with open(filename, "w") as f:
+            f.write(self.graphviz_digraph)
 
     def reset(self):
         self._is_finished = False
