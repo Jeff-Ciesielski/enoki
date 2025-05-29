@@ -129,31 +129,36 @@ class State:
     on_state is the main/required method of each state. on_state should return
     one of several options:
 
-    * Returning 'None' indicates that the state did nothing with the
-    message (which will cause the message to be trapped by the encapsulating
-    FSM). On the next tick, the on_enter method is bypassed, and the state will
-    begin from its on_state method. This is a wait in the current instance of
-    the state, for the right message needed to transition.
+    * Returning 'None' (or simply letting the function exit) indicates that the
+    FSM will remain in the current state, and that if there was a message passed
+    in, it was not handled (which will cause the message to be trapped by the
+    encapsulating FSM). On the next tick, the state will begin from its on_state
+    method. Note that this is essentially a 'wait' and if the state does not
+    have a timeout defined, and it is not included in the FSM's 'dwell states',
+    an error will be thrown as the FSM could otherwise be stalled indefinitely
+    (See the section on TIMEOUT).
 
     * Returning 'Repeat' indicates that the state swallowed the message that
     it was passed. On the next tick, the same state will begin from its on_enter
     method. This is a transition from the current state back to a new instance
     of the same state.
 
-    * Returning 'Retry'  will restart execution from on_enter. Note that this is
-    a tool for handling "bad input", and the FSM will not tick, and no new
-    message will be acquired.
+    * Returning the constructor (not an instance!) of the current state will
+    immediately retry the current state starting from on_enter. This will cause
+    the FSM's retry counter to be decremented, and if the retry limit is
+    reached, the on_fail handler will be called.
 
     * Returning another state's constructor (Not an instance!) is a
     transition. The FSM will fire the current on_leave handler (if it exists)
-    and transition to the next state.
+    and transition to the next state, first calling its on_enter, and then it's
+    on_state handler. This is the most common way to transition between states.
 
-    * Returning 'Push' with a number of states as constructor arguments will
-    transtiion to the first state and push the  rest onto the state stack.
-    Example: Push(State1, State2, State3) would transition to State1 and then
-    when a 'Pop' is encountered, State2 would be popped off the stack and
-    transitioned to. Note that 'Pushing' a single state is functionally
-    equivalent to a 'Transition' to that state.
+    * Returning 'Push' with any number of state constructors as 
+    arguments will transtiion to the first state and push the  rest onto the
+    state stack. Example: Push(State1, State2, State3) would transition to
+    State1 and then when a 'Pop' is encountered, State2 would be popped off the
+    stack and transitioned to. Note that 'Pushing' a single state is
+    functionally equivalent to a 'Transition' to that state.
 
     * Returning 'Pop' will pop the top state off the stack and transition to
     that state. If the stack is empty, an EmptyStateStackError will be raised.
@@ -166,7 +171,7 @@ class State:
     in response to this event. on_timeout may return None, which will cause the
     state machine's default error state to be entered, the descriptor of the
     current state, which will reset the timer, or the descriptor of a specific
-    error state.
+    error state. 
 
     RETRIES specifies how many times a state may be retried before an error
     condition is flagged (default is None (infinite)). When this error condition
@@ -339,11 +344,6 @@ class Pop(TransitionType):
 
 @dataclass
 class Repeat(TransitionType):
-    pass
-
-
-@dataclass
-class Retry(TransitionType):
     pass
 
 

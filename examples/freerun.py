@@ -11,7 +11,7 @@ class Ping(State):
 
     def on_state(self, st):
         print("Ping")
-        return self
+        return Ping
 
     def on_fail(self, st):
         return Pong
