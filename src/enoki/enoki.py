@@ -615,6 +615,11 @@ class StateMachine:
 
     def clear_state_stack(self):
         self._state_stack = []
+        
+    @property
+    def current_state_stack(self):
+        """Returns a copy of the current state stack."""
+        return self._state_stack.copy()
 
     def cleanup(self):
         if self._current:
