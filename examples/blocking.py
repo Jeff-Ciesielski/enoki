@@ -96,15 +96,9 @@ class Common:
 
 
 def loop(msg_queue):
-    # msg_queue should be accessible to another thread which is
-    # handling IPC traffic or otherwise generating events to be
-    # consumed by the state machine
-
     fsm = enoki.StateMachine(
         initial_state=Foo,
-        final_state=enoki.DefaultStates.End,
-        default_error_state=ErrorState,
-        msg_queue=msg_queue,
+        error_state=ErrorState,
         log_fn=print,
         trap_fn=trap_msg,
         common_data=Common())
@@ -116,8 +110,8 @@ def loop(msg_queue):
         msg = msg_queue.get()
         if msg is None:
             break
-        fsm.tick(msg)
-        
+        fsm.send_message(msg)
+        fsm.tick()
     # Dump the state transitions as a mermaid graph
     fsm.save_mermaid_flowchart('blocking_state_machine.mmd')
 

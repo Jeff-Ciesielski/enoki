@@ -34,10 +34,8 @@ class ErrorState(State):
 def main():
     fsm = enoki.StateMachine(
         initial_state=Ping,
-        final_state=enoki.DefaultStates.End,
-        default_error_state=ErrorState,
+        error_state=ErrorState,
         log_fn=print)
-
     # Runs forever
     fsm.start_non_blocking()
 
