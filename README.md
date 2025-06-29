@@ -3,6 +3,7 @@
 Enoki is a finite state machine library for asynchronous event based
 systems.
 
+
 ## Features
 
 - **State Lifecycle Management**: Complete control over state entry, execution, and exit
@@ -39,8 +40,7 @@ class ErrorState(State):
 # Create and run the state machine
 fsm = enoki.StateMachine(
     initial_state=Ping,
-    final_state=enoki.DefaultStates.End,
-    default_error_state=ErrorState
+    error_state=ErrorState
 )
 
 # Single step execution
@@ -48,6 +48,7 @@ fsm.tick()  # Prints "Ping!" and transitions to Pong
 ```
 
 ## Core Concepts
+
 
 ### States
 
@@ -59,10 +60,19 @@ States are the fundamental building blocks of your FSM. Each state inherits from
 - **`on_fail(shared_state)`**: Called when retry limit is exceeded
 - **`on_timeout(shared_state)`**: Called when state timeout occurs
 
+States can also define optional parameters:
+
+- **`TIMEOUT`**: Timeout in seconds; if set, the FSM will call `on_timeout` if the state waits too long for a message.
+- **`RETRIES`**: Number of retries before failure; if set, the FSM will call `on_fail` when the retry limit is exceeded.
+- **`TERMINAL`**: If set to `True`, marks the state as terminal and causes the FSM to exit when reached.
+- **`CAN_DWELL`**: If set to `True`, allows the state to wait indefinitely for messages, even without a timeout.
+
 ```python
 class ExampleState(State):
     TIMEOUT = 30    # Optional: timeout in seconds
     RETRIES = 3     # Optional: number of retries before failure
+    TERMINAL = False  # Optional: mark as terminal state
+    CAN_DWELL = False # Optional: allow indefinite waiting
     
     def on_enter(self, shared_state):
         print("Entering state")
@@ -80,16 +90,19 @@ class ExampleState(State):
         print("Leaving state")
 ```
 
+
 ### Transitions
 
 States can return different values to control transitions:
 
 - **`NextState`**: Transition to a different state
-- **`type(self)` or the constructor for the current state**: Retry the current state immediately (triggers retry counter) 
-- **`Repeat`**: Re-enter the same state from the beginning on the next tick
-- **`Push(State1, State2, ...)`**: Push states onto stack and transition to first
-- **`Pop`**: Pop and transition to top state from stack
-- **`None`**: Stay in current state (wait for next message)
+- **`Again`**: Immediate continuation; re-enters the current state from `on_state` (does not reset retries/timer)
+- **`Repeat`**: Renewal; restarts the current state from `on_enter` (resets retries/timer)
+- **`Restart`**: Resets the retry counter, re-enters the state from `on_enter`, and waits for the next message
+- **`Retry`**: Decrements the retry counter, re-enters the state from `on_enter` immediately
+- **`Push(State1, State2, ...)`**: Push states onto stack and transition to the first
+- **`Pop`**: Pop and transition to the top state from stack
+- **`None`** or **`Unhandled`**: Stay in current state (wait for next message)
 
 ### Shared State
 
@@ -117,30 +130,24 @@ class DataProcessor(State):
 
 ### Message-Driven State Machines
 
-Handle external events and messages:
+Message-driven state machines handle external events and messages using an internal queue. Use `send_message()` to enqueue messages for processing:
 
 ```python
-import queue
+fsm = enoki.StateMachine(
+    initial_state=WaitingState,
+    error_state=ErrorState,
+    trap_fn=handle_unprocessed_messages  # Optional message handler
+)
 
-def main():
-    msg_queue = queue.Queue()
-    
-    fsm = enoki.StateMachine(
-        initial_state=WaitingState,
-        final_state=enoki.DefaultStates.End,
-        default_error_state=ErrorState,
-        msg_queue=msg_queue,
-        trap_fn=handle_unprocessed_messages  # Optional message handler
-    )
-    
-    # Send messages to the state machine
-    msg_queue.put({'type': 'start', 'data': 'hello'})
-    
-    # Process messages
-    while not fsm.is_finished:
-        message = msg_queue.get()
-        fsm.tick(message)
+# Send messages to the state machine
+fsm.send_message({'type': 'start', 'data': 'hello'})
+
+# Process messages
+while not fsm.is_finished:
+    fsm.tick()  # Processes the next message in the queue
 ```
+
+> **Note:** The state machine manages its own internal message queue. Use `send_message()` to add messages and `tick()` to process them.
 
 ### State Stack (Pushdown Automata)
 
@@ -204,8 +211,7 @@ class DataContainer:
 
 fsm = enoki.StateMachine(
     initial_state=LoginState,
-    final_state=enoki.DefaultStates.End,
-    default_error_state=ErrorState,
+    error_state=ErrorState,
     common_data=DataContainer()
 )
 ```
@@ -235,8 +241,7 @@ def message_trap(shared_state):
 
 fsm = enoki.StateMachine(
     initial_state=StartState,
-    final_state=enoki.DefaultStates.End,
-    default_error_state=ErrorState,
+    error_state=ErrorState,
     filter_fn=message_filter,
     trap_fn=message_trap
 )
@@ -249,16 +254,13 @@ The `StateMachine` constructor accepts several configuration options:
 ```python
 fsm = enoki.StateMachine(
     initial_state=StartState,           # Required: Starting state
-    final_state=EndState,               # Required: Terminal state
-    default_error_state=ErrorState,     # Required: Default error handler
-    msg_queue=queue.Queue(),            # Optional: Message queue
+    error_state=ErrorState,     # Required: Default error handler
     filter_fn=message_filter,           # Optional: Pre-filter messages
     trap_fn=handle_unprocessed,         # Optional: Handle unprocessed messages
     on_error_fn=error_handler,          # Optional: Global error handler
     log_fn=print,                       # Optional: Logging function
     transition_fn=log_transitions,      # Optional: Transition callback
-    common_data=SharedData(),           # Optional: Shared state object
-    dwell_states=[WaitState]            # Optional: States that can wait indefinitely
+    common_data=SharedData()            # Optional: Shared state object
 )
 ```
 
@@ -290,7 +292,6 @@ Illustrates timeout handling and dwell states in an event-driven architecture.
 ## Error Handling
 
 Enoki provides comprehensive error handling:
-
 - **`StateRetryLimitError`**: Raised when a state exceeds its retry limit
 - **`StateTimedOut`**: Raised when a state exceeds its timeout duration
 - **`MissingOnStateHandler`**: Raised when a state lacks the required `on_state` method

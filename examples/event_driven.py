@@ -18,6 +18,7 @@ class Ping(State):
 
 
 class Pong(State):
+    CAN_DWELL=True
     def on_state(self, st):
         if st.msg:
             print("Pong: ", st.msg['data'])
@@ -30,23 +31,18 @@ class ErrorState(State):
 
 
 def loop(msg_queue):
-    # msg_queue should be accessible to another thread which is
-    # handling IPC traffic or otherwise generating events to be
-    # consumed by the state machine
-
     fsm = enoki.StateMachine(
         initial_state=Ping,
-        final_state=enoki.DefaultStates.End,
-        default_error_state=ErrorState,
-        msg_queue=msg_queue,
-        log_fn=print,
-        dwell_states=[Pong])
+        error_state=ErrorState,
+        log_fn=print)
 
     # Initial kick of the state machine for setup
     fsm.tick()
 
     while True:
-        fsm.tick(msg_queue.get())
+        msg = msg_queue.get()
+        fsm.send_message(msg)
+        fsm.tick()
 
 
 def msg_loop(msg_queue):
